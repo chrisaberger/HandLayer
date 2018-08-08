@@ -107,6 +107,16 @@ struct LSTM {
                                            -0.0856, 0.3247,  0.1856,  -0.4329,
                                            0.1160,  0.1387,  -0.3866, -0.2739};
 
+      /*
+      std::vector<float> bias_ih_l_data = {0,  0,  0,  0,
+                                           0,  0,  0,  0,
+                                           0,  0,  0,  0};
+
+      std::vector<float> bias_hh_l_data = {0,  0,  0,  0,
+                                           0,  0,  0,  0,
+                                           0,  0,  0,  0};
+      */
+
       size_t input_copy_size = hidden_size * input_size;
       size_t input_offset = (input_size + hidden_size) * hidden_size;
       size_t hidden_copy_size = hidden_size * hidden_size;
@@ -164,10 +174,8 @@ struct LSTM {
         }
       }
 
-      /*
       memcpy(bias_ih_l, bias_ih_l_data.data(), sizeof(float) * 4 * hidden_size);
       memcpy(bias_hh_l, bias_hh_l_data.data(), sizeof(float) * 4 * hidden_size);
-      */
     }
   }
 
@@ -175,7 +183,7 @@ struct LSTM {
              const int K, float* buffer, std::function<float(float)> f) {
     // memcpy(buffer, bias, sizeof(float) * 4 * hidden_size);
     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1.0, X, K,
-                W, N, 0.0, buffer, N);
+                W, N, 1.0, buffer, N);
     for (int i = 0; i < M; ++i) {
       for (int j = 0; j < N; ++j) {
         buffer[i * N + j] = f(buffer[i * N + j]);
@@ -207,15 +215,39 @@ struct LSTM {
     // We might not always need to do this if the input comes in concatenated.
     const size_t weights_index = (input_size + hidden_size) * hidden_size;
 
+    for (size_t i = 0; i < batch_size; ++i) {
+      for (size_t j = 0; j < hidden_size; ++j) {
+        i_t[i * hidden_size + j] = bias_ih_l[j] + bias_hh_l[j];
+      }
+    }
+    print_matrix(i_t, batch_size, hidden_size);
     layer(x_h_in_cat, &weights_l[weights_index * 0], bias_ih_l, batch_size,
           hidden_size, (input_size + hidden_size), i_t, fp_sigmoid);
 
+    for (size_t i = 0; i < batch_size; ++i) {
+      for (size_t j = 0; j < hidden_size; ++j) {
+        f_t[i * hidden_size + j] =
+            bias_ih_l[hidden_size + j] + bias_hh_l[hidden_size + j];
+      }
+    }
     layer(x_h_in_cat, &weights_l[weights_index * 1], bias_ih_l, batch_size,
           hidden_size, (input_size + hidden_size), f_t, fp_sigmoid);
 
+    for (size_t i = 0; i < batch_size; ++i) {
+      for (size_t j = 0; j < hidden_size; ++j) {
+        g_t[i * hidden_size + j] =
+            bias_ih_l[2*hidden_size + j] + bias_hh_l[2* hidden_size + j];
+      }
+    }
     layer(x_h_in_cat, &weights_l[weights_index * 2], bias_ih_l, batch_size,
           hidden_size, (input_size + hidden_size), g_t, fp_tanh);
 
+    for (size_t i = 0; i < batch_size; ++i) {
+      for (size_t j = 0; j < hidden_size; ++j) {
+        o_t[i * hidden_size + j] =
+            bias_ih_l[3*hidden_size + j] + bias_hh_l[3* hidden_size + j];
+      }
+    }
     layer(x_h_in_cat, &weights_l[weights_index * 3], bias_ih_l, batch_size,
           hidden_size, (input_size + hidden_size), o_t, fp_sigmoid);
 
