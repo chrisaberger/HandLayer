@@ -11,12 +11,17 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 SET(BASE_DIR "csim")
 
 find_package( OpenBLAS REQUIRED )
+find_package( ZLIB REQUIRED )
 
 include_directories(${OpenBLAS_INCLUDE_DIRS})
 
-add_executable(csim main.cc)
+add_executable(csim main.cc
+  cnpy.cc
+  tensor.cc
+)
 
 # link blas
 target_link_libraries(csim
     ${OpenBLAS_LIBRARIES}
+    ${ZLIB_LIBRARIES}
 )
