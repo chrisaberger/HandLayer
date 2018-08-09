@@ -15,6 +15,8 @@ struct Tensor {
   Tensor(){};
   Tensor(const std::vector<size_t> shape);
 
+  static Tensor<T> from_vec(const std::vector<T>& vec,
+                            const std::vector<size_t>& shape_in);
   static Tensor<T> from_npy(const std::string npy_filename);
   static Tensor<T> copy(const Tensor<T> &src);
 

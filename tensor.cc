@@ -17,6 +17,19 @@ Tensor<T> Tensor<T>::from_npy(const std::string filename) {
 }
 
 template <class T>
+Tensor<T> Tensor<T>::from_vec(const std::vector<T>& vec,
+                              const std::vector<size_t>& shape_in) {
+  Tensor<T> t;
+  t.shape = shape_in;
+  t.numel = vec.size();
+
+  T* rawptr = (T*)malloc(sizeof(T) * t.numel);
+  memcpy(rawptr, vec.data(), t.numel * sizeof(T));
+  t.data = std::unique_ptr<T>(rawptr);
+  return t;
+}
+
+template <class T>
 Tensor<T>::Tensor(std::vector<size_t> shape_in) {
   shape = shape_in;
 
@@ -26,7 +39,6 @@ Tensor<T>::Tensor(std::vector<size_t> shape_in) {
     numel *= s;
   }
 
-  std::cout << "NUMEL: " << numel << std::endl;
   // Allocate our data.
   T* rawptr = (T*)malloc(sizeof(T) * numel);
   data = std::unique_ptr<T>(rawptr);

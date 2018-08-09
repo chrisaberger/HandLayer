@@ -3,6 +3,8 @@
 #include "cblas.h"
 #include "tensor.h"
 
+typedef  Tensor<float> t_type;
+
 namespace {
 float fp_sigmoid(const float in) { return 1.0 / (1.0 + exp(-in)); }
 float fp_tanh(const float in) { return tanh(in); }
@@ -27,12 +29,12 @@ struct LSTM {
 
   Inputs look like:
                 
-              inp size  hidden_size   i   h    i    h   i   h   i   h
-              ---------------------------------------------------------
-             |        |            |    |    |    |   |   |   |   |   |
-  batch_size |        |            |    |    |    |   |   |   |   |   |
-             |        |            |    |    |    |   |   |   |   |   |
-              ---------------------------------------------------------     
+              inp size  hidden_size 
+              ----------------------
+             |        |            |
+  batch_size |        |            |
+             |        |            |
+              ----------------------   
   */    
   Tensor<float> weights_l;
   Tensor<float> bias_ih_l;
@@ -41,8 +43,8 @@ struct LSTM {
   /*
   Intermediate Buffers.
   */
-  float* x_h_in_cat;
-  float* buffers;
+  Tensor<float> x_h_in_cat;
+  Tensor<float> buffers;
 
   const size_t input_size;
   const size_t hidden_size;
@@ -69,9 +71,8 @@ struct LSTM {
     weights_l.zero();
 
     // Allocate intermediate buffers.
-    buffers = (float*)malloc(4 * sizeof(float) * batch_size * hidden_size);
-    x_h_in_cat =
-        (float*)malloc(sizeof(float) * batch_size * (hidden_size + input_size));
+    buffers = Tensor<float>({batch_size, 4 * hidden_size});
+    x_h_in_cat = Tensor<float>({batch_size, hidden_size + input_size});
   }
 
   void gemm(float* X, float* W, const int M, const int N,
@@ -82,85 +83,58 @@ struct LSTM {
                 W, N, bias_f, buffer, N);
   }
 
-  void layer(float* X, float* W, float* bias, const int M, const int N,
-             const int K, float* buffer, std::function<float(float)> f) {
-    // memcpy(buffer, bias, sizeof(float) * 4 * hidden_size);
-    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1.0, X, K,
-                W, N, 1.0, buffer, N);
-    for (int i = 0; i < M; ++i) {
-      for (int j = 0; j < N; ++j) {
-        buffer[i * N + j] = f(buffer[i * N + j]);
-      }
-    }
-  }
-
-  std::tuple<float*, float*> forward(const float* X, const float* H,
-                                     const float* C, const int batch_size) {
+  std::tuple<t_type, t_type> forward(const Tensor<float>& X,
+                                     const Tensor<float>& H,
+                                     const Tensor<float>& C,
+                                     const size_t batch_size,
+                                     const size_t batch_start) {
     /*
     Output buffers.
     */
-    float* h_t = (float*)malloc(sizeof(float) * batch_size * hidden_size);
-    float* c_t = (float*)malloc(sizeof(float) * batch_size * hidden_size);
+    Tensor<float> h_t({batch_size, hidden_size});
+    Tensor<float> c_t({batch_size, hidden_size});
 
     // Copy into x_h.
     for (size_t i = 0; i < batch_size; ++i) {
       for (size_t j = 0; j < input_size; ++j) {
-        x_h_in_cat[i * (input_size + hidden_size) + j] = X[i * input_size + j];
+        x_h_in_cat(i, j) = X(i+batch_start, j);
       }
     }
     for (size_t i = 0; i < batch_size; ++i) {
       for (size_t j = 0; j < hidden_size; ++j) {
-        x_h_in_cat[i * (input_size + hidden_size) + j + input_size] =
-            H[i * hidden_size + j];
+        x_h_in_cat(i, j + input_size) = H(i, j);
       }
     }
 
     // Copy bias term into place.
     for (size_t i = 0; i < batch_size; ++i) {
       for (size_t j = 0; j < hidden_size; ++j) {
-        buffers[i * hidden_size * 4 + j] =
-            bias_ih_l(0, j) + bias_hh_l(0, j);
-        buffers[hidden_size + i * hidden_size * 4 + j] =
-            bias_ih_l(1, j) + bias_hh_l(1, j);
-
-        buffers[2 * hidden_size + i * hidden_size * 4 + j] =
-            bias_ih_l(2, j) + bias_hh_l(2, j);
-
-        buffers[3 * hidden_size + i * hidden_size * 4 + j] =
-            bias_ih_l(3, j) + bias_hh_l(3, j);
+        buffers(i, j) = bias_ih_l(0, j) + bias_hh_l(0, j);
+        buffers(i, j + hidden_size) = bias_ih_l(1, j) + bias_hh_l(1, j);
+        buffers(i, j + 2 * hidden_size) = bias_ih_l(2, j) + bias_hh_l(2, j);
+        buffers(i, j + 3 * hidden_size) = bias_ih_l(3, j) + bias_hh_l(3, j);
       }
     }
-
-    print_matrix(buffers, batch_size, 4 * hidden_size);
-
-    print_matrix(x_h_in_cat, batch_size, input_size + hidden_size);
 
     weights_l.print();
 
-    gemm(x_h_in_cat, weights_l.data_ptr(), batch_size, 4 * hidden_size,
-         input_size + hidden_size, buffers);
-
-    print_matrix(buffers, batch_size, 4* hidden_size);
-
+    gemm(x_h_in_cat.data_ptr(), weights_l.data_ptr(), batch_size, 4 * hidden_size,
+         input_size + hidden_size, buffers.data_ptr());
 
     for (int i = 0; i < batch_size; ++i) {
       for (int j = 0; j < hidden_size; ++j) {
-        const float i_t = fp_sigmoid(buffers[i * hidden_size * 4 + j]);
-        const float f_t =
-            fp_sigmoid(buffers[hidden_size + i * hidden_size * 4 + j]);
-        const float g_t =
-            fp_tanh(buffers[2 * hidden_size + i * hidden_size * 4 + j]);
-        const float o_t =
-            fp_sigmoid(buffers[3 * hidden_size + i * hidden_size * 4 + j]);
+        const float i_t = fp_sigmoid(buffers(i, j));
+        const float f_t = fp_sigmoid(buffers(i, j + hidden_size));
+        const float g_t = fp_tanh(buffers(i, j + 2 * hidden_size));
+        const float o_t = fp_sigmoid(buffers(i, j + 3 * hidden_size));
 
-        const float tmp1 = f_t * C[i * hidden_size + j];
+        const float tmp1 = f_t * C(i, j);
         const float tmp2 = i_t * g_t;
-        c_t[i * hidden_size + j] = tmp1 + tmp2;
-        h_t[i * hidden_size + j] =
-            fp_tanh(c_t[i * hidden_size + j]) * o_t;
+        c_t(i, j) = tmp1 + tmp2;
+        h_t(i, j) = fp_tanh(c_t(i, j)) * o_t;
       }
     }
-    return std::make_tuple(h_t, c_t);
+    return std::make_tuple(std::move(h_t), std::move(c_t));
   }
 
 

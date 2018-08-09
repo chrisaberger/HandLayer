@@ -15,38 +15,39 @@ int main() {
       -2.5667, -1.4303, 0.5009,  
       0.5438,  -0.4057, 1.1341};
 
-  /*
+  size_t input_size = 3;
+  size_t batch_size = 2;
+  size_t n_hidden = 3;
 
-  std::vector<float> h = {-0.6331, 0.8795, -0.6842, 0.4533, 0.2912, -0.8317};
+  Tensor<float> input = Tensor<float>::from_vec(
+      input_data, {input_data.size() / input_size, input_size});
 
-  */
-  
-  std::vector<float> h = {-0.6331, 0.8795, -0.6842, -1.1352,  0.3773, -0.2824};
-  std::vector<float> c = {-0.5525, 0.6355, -0.3968, -0.6571, -1.6428, 0.9803};
+  input.print();
 
-  Tensor<float> h_new = Tensor<float>::from_npy("../h.npy");
-  h_new.print();
+  Tensor<float> h = Tensor<float>::from_npy("../h.npy");
+  h.shape = {batch_size, n_hidden};
+  h.print();
 
-  Tensor<float> c_new = Tensor<float>::from_npy("../c.npy");
-  c_new.print();
+  Tensor<float> c = Tensor<float>::from_npy("../c.npy");
+  c.shape = {batch_size, n_hidden};
+  c.print();
 
   //std::vector<float> h = {1, 1, 1, 1, 1, 1};
   //std::vector<float> c = {0, 0, 0, 0, 0, 0};
 
-  int input_size = 3;
-  int batch_size = 2;
-  int n_hidden = 3;
+
   LSTM lstm = LSTM(input_size, n_hidden, batch_size, 1, true);
   lstm.set_weights(Tensor<float>::from_npy("../weight_ih.npy"),
                    Tensor<float>::from_npy("../weight_hh.npy"),
                    Tensor<float>::from_npy("../bias_ih.npy"),
                    Tensor<float>::from_npy("../bias_hh.npy"));
-  std::tuple<float*, float*> h_c =
-      lstm.forward(input_data.data(), h.data(), c.data(), batch_size);
+  std::tuple< Tensor<float>, Tensor<float> > h_c =
+      lstm.forward(input, h, c, batch_size, 0);
 
   std::cout << "h_t" << std::endl;
-  lstm.print_matrix(std::get<0>(h_c), batch_size, lstm.hidden_size);
+  std::get<0>(h_c).print();
   std::cout << "c_t" << std::endl;
-  lstm.print_matrix(std::get<1>(h_c), batch_size, lstm.hidden_size);
+  std::get<1>(h_c).print();
+
   return 0;
 }
