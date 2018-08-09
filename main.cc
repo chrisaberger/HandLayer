@@ -1,19 +1,19 @@
 #include <iostream>
 #include "lstm.h"
 #include "tensor.h"
+#include "embedding.h"
 
 int main() {
+  Embedding<float> emb = Embedding<float>(100, 6);
+  Tensor<float> embs =
+      emb.forward(Tensor<size_t>::from_vec({1, 10, 90, 95}, {2, 2}));
+  embs.print();
+
   std::vector<float> input_data = {
-      0.8310,  -0.2477, -0.8029, 
-      0.2366,  0.2857,  0.6898,  
-      -0.6331, 0.8795,  -0.6842, 
-      0.4533,  0.2912,  -0.8317, 
-      -0.5525, 0.6355,  -0.3968, 
-      -0.6571, -1.6428, 0.9803,  
-      -0.0421, -0.8206, 0.3133,  
-      -1.1352, 0.3773,  -0.2824,
-      -2.5667, -1.4303, 0.5009,  
-      0.5438,  -0.4057, 1.1341};
+      0.8310,  -0.2477, -0.8029, 0.2366,  0.2857,  0.6898,  -0.6331, 0.8795,
+      -0.6842, 0.4533,  0.2912,  -0.8317, -0.5525, 0.6355,  -0.3968, -0.6571,
+      -1.6428, 0.9803,  -0.0421, -0.8206, 0.3133,  -1.1352, 0.3773,  -0.2824,
+      -2.5667, -1.4303, 0.5009,  0.5438,  -0.4057, 1.1341};
 
   size_t input_size = 3;
   size_t batch_size = 2;
@@ -32,17 +32,13 @@ int main() {
   c.shape = {batch_size, n_hidden};
   c.print();
 
-  //std::vector<float> h = {1, 1, 1, 1, 1, 1};
-  //std::vector<float> c = {0, 0, 0, 0, 0, 0};
-
-
   LSTM lstm = LSTM(input_size, n_hidden, batch_size, 1, true);
   lstm.set_weights(Tensor<float>::from_npy("../weight_ih.npy"),
                    Tensor<float>::from_npy("../weight_hh.npy"),
                    Tensor<float>::from_npy("../bias_ih.npy"),
                    Tensor<float>::from_npy("../bias_hh.npy"));
   std::tuple< Tensor<float>, Tensor<float> > h_c =
-      lstm.forward(input, h, c, batch_size, 0);
+      lstm.forward(input.view(0, 2), h, c);
 
   std::cout << "h_t" << std::endl;
   std::get<0>(h_c).print();

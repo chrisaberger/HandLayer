@@ -69,7 +69,6 @@ struct LSTM {
     //std::vector<size_t> a = ;
     weights_l = Tensor<float>({input_size + hidden_size, 4 * hidden_size});
     weights_l.zero();
-
     // Allocate intermediate buffers.
     buffers = Tensor<float>({batch_size, 4 * hidden_size});
     x_h_in_cat = Tensor<float>({batch_size, hidden_size + input_size});
@@ -85,9 +84,8 @@ struct LSTM {
 
   std::tuple<t_type, t_type> forward(const Tensor<float>& X,
                                      const Tensor<float>& H,
-                                     const Tensor<float>& C,
-                                     const size_t batch_size,
-                                     const size_t batch_start) {
+                                     const Tensor<float>& C) {
+    const size_t batch_size = X.shape[0];
     /*
     Output buffers.
     */
@@ -97,7 +95,7 @@ struct LSTM {
     // Copy into x_h.
     for (size_t i = 0; i < batch_size; ++i) {
       for (size_t j = 0; j < input_size; ++j) {
-        x_h_in_cat(i, j) = X(i+batch_start, j);
+        x_h_in_cat(i, j) = X(i, j);
       }
     }
     for (size_t i = 0; i < batch_size; ++i) {
@@ -118,8 +116,8 @@ struct LSTM {
 
     weights_l.print();
 
-    gemm(x_h_in_cat.data_ptr(), weights_l.data_ptr(), batch_size, 4 * hidden_size,
-         input_size + hidden_size, buffers.data_ptr());
+    gemm(x_h_in_cat.data_ptr(), weights_l.data_ptr(), batch_size,
+         4 * hidden_size, input_size + hidden_size, buffers.data_ptr());
 
     for (int i = 0; i < batch_size; ++i) {
       for (int j = 0; j < hidden_size; ++j) {
