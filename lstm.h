@@ -73,26 +73,26 @@ struct LSTM {
     // Take matrix and transpose it.
     for (size_t i = 0; i < input_size; ++i) {
       for (size_t j = 0; j < hidden_size; ++j) {
-        weights_l[i * hidden_size * 4 + j] = weight_ih_l[j * input_size + i];
+        weights_l[i * hidden_size * 4 + j] = weight_ih_l(j, i);
         weights_l[hidden_size + i * hidden_size * 4 + j] =
-            weight_ih_l[input_copy_size + j * input_size + i];
+            weight_ih_l(j + input_size, i);
         weights_l[2 * hidden_size + i * hidden_size * 4 + j] =
-            weight_ih_l[2 * input_copy_size + j * input_size + i];
+            weight_ih_l(j + input_size * 2, i);
         weights_l[3 * hidden_size + i * hidden_size * 4 + j] =
-            weight_ih_l[3 * input_copy_size + j * input_size + i];
+            weight_ih_l(j + input_size * 3, i);
       }
     }
     for (size_t i = 0; i < hidden_size; ++i) {
       for (size_t j = 0; j < hidden_size; ++j) {
         weights_l[input_copy_size * 4 + i * hidden_size * 4 + j] =
-            weight_hh_l[j * hidden_size + i];
+            weight_hh_l(j, i);
         weights_l[hidden_size + input_copy_size * 4 + i * hidden_size * 4 + j] =
-            weight_hh_l[hidden_copy_size + j * hidden_size + i];
+            weight_hh_l(hidden_size + j, i);
 
         weights_l[2 * hidden_size + 4 * input_copy_size + 4 * i * hidden_size +
-                  j] = weight_hh_l[2 * hidden_copy_size + j * hidden_size + i];
+                  j] = weight_hh_l(hidden_size * 2 + j, i);
         weights_l[3 * hidden_size + 4 * input_copy_size + i * hidden_size * 4 +
-                  j] = weight_hh_l[3 * hidden_copy_size + j * hidden_size + i];
+                  j] = weight_hh_l(hidden_size * 3 + j, i);
       }
     }
 
