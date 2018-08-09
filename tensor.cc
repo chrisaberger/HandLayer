@@ -26,6 +26,7 @@ Tensor<T>::Tensor(std::vector<size_t> shape_in) {
     numel *= s;
   }
 
+  std::cout << "NUMEL: " << numel << std::endl;
   // Allocate our data.
   T* rawptr = (T*)malloc(sizeof(T) * numel);
   data = std::unique_ptr<T>(rawptr);
@@ -66,6 +67,18 @@ const T Tensor<T>::operator()(const size_t i, const size_t j) const
 template<class T>     
 void Tensor<T>::zero(){
   memset(data.get(), 0, numel * sizeof(T));
+}
+
+template<class T>     
+Tensor<T> Tensor<T>::copy(const Tensor<T>& src){
+  Tensor<T> dst;
+  dst.numel = src.numel;
+  dst.shape = src.shape;
+
+  T* dst_data = (T*)malloc(sizeof(T) * src.numel);
+  memcpy(dst_data, src.data.get(), sizeof(T) * src.numel);
+  dst.data = std::unique_ptr<T>(dst_data);
+  return dst;
 }
 
 template <class T>

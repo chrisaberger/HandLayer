@@ -35,16 +35,12 @@ struct LSTM {
               ---------------------------------------------------------     
   */    
   Tensor<float> weights_l;
-  float* bias_ih_l;
-  float* bias_hh_l;
+  Tensor<float> bias_ih_l;
+  Tensor<float> bias_hh_l;
 
   /*
   Intermediate Buffers.
   */
-  float* f_t;
-  float* i_t;
-  float* g_t;
-  float* o_t;
   float* x_h_in_cat;
   float* buffers;
 
@@ -56,10 +52,10 @@ struct LSTM {
   const int dropout;
   const bool bidirectional;
 
-  LSTM(const size_t input_size, const size_t hidden_size, const size_t batch_size,
-       const size_t num_layers = 1, const bool bias = true,
-       const bool batch_first = false, const int dropout = 0,
-       const bool bidirectional = false)
+  LSTM(const size_t input_size, const size_t hidden_size,
+       const size_t batch_size, const size_t num_layers = 1,
+       const bool bias = true, const bool batch_first = false,
+       const int dropout = 0, const bool bidirectional = false)
       : input_size(input_size),
         hidden_size(hidden_size),
         num_layers(num_layers),
@@ -72,14 +68,8 @@ struct LSTM {
     weights_l = Tensor<float>({input_size + hidden_size, 4 * hidden_size});
     weights_l.zero();
 
-    bias_ih_l = (float*)malloc(sizeof(float) * 4 * hidden_size);
-    bias_hh_l = (float*)malloc(sizeof(float) * 4 * hidden_size);
-
     // Allocate intermediate buffers.
     buffers = (float*)malloc(4 * sizeof(float) * batch_size * hidden_size);
-    i_t = (float*)malloc(sizeof(float) * batch_size * hidden_size);
-    g_t = (float*)malloc(sizeof(float) * batch_size * hidden_size);
-    o_t = (float*)malloc(sizeof(float) * batch_size * hidden_size);
     x_h_in_cat =
         (float*)malloc(sizeof(float) * batch_size * (hidden_size + input_size));
   }
@@ -129,15 +119,15 @@ struct LSTM {
     for (size_t i = 0; i < batch_size; ++i) {
       for (size_t j = 0; j < hidden_size; ++j) {
         buffers[i * hidden_size * 4 + j] =
-            bias_ih_l[0*hidden_size + j] + bias_hh_l[0* hidden_size + j];
+            bias_ih_l(0, j) + bias_hh_l(0, j);
         buffers[hidden_size + i * hidden_size * 4 + j] =
-            bias_ih_l[1*hidden_size + j] + bias_hh_l[1* hidden_size + j];
+            bias_ih_l(1, j) + bias_hh_l(1, j);
 
         buffers[2 * hidden_size + i * hidden_size * 4 + j] =
-            bias_ih_l[2*hidden_size + j] + bias_hh_l[2* hidden_size + j];
+            bias_ih_l(2, j) + bias_hh_l(2, j);
 
         buffers[3 * hidden_size + i * hidden_size * 4 + j] =
-            bias_ih_l[3*hidden_size + j] + bias_hh_l[3* hidden_size + j];
+            bias_ih_l(3, j) + bias_hh_l(3, j);
       }
     }
 
@@ -199,8 +189,10 @@ struct LSTM {
       }
     }
 
-    memcpy(bias_ih_l, bias_ih_ll.data.get(), sizeof(float) * 4 * hidden_size);
-    memcpy(bias_hh_l, bias_hh_ll.data.get(), sizeof(float) * 4 * hidden_size);
+    bias_ih_l = Tensor<float>::copy(bias_ih_ll);
+    bias_ih_l.shape = {4, hidden_size};
+    bias_hh_l = Tensor<float>::copy(bias_hh_ll);
+    bias_hh_l.shape = {4, hidden_size};
   }
 
   void print_matrix(float* data, int dim1, int dim2) {
