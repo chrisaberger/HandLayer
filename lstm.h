@@ -62,45 +62,6 @@ struct LSTM {
         (float*)malloc(sizeof(float) * batch_size * (hidden_size + input_size));
   }
 
-  void set_weights(const Tensor<float>& weight_ih_l,
-                   const Tensor<float>& weight_hh_l,
-                   const Tensor<float>& bias_ih_ll,
-                   const Tensor<float>& bias_hh_ll) {
-    size_t input_copy_size = hidden_size * input_size;
-    size_t input_offset = (input_size + hidden_size) * hidden_size;
-    size_t hidden_copy_size = hidden_size * hidden_size;
-
-    // Take matrix and transpose it.
-    for (size_t i = 0; i < input_size; ++i) {
-      for (size_t j = 0; j < hidden_size; ++j) {
-        weights_l[i * hidden_size * 4 + j] = weight_ih_l(j, i);
-        weights_l[hidden_size + i * hidden_size * 4 + j] =
-            weight_ih_l(j + input_size, i);
-        weights_l[2 * hidden_size + i * hidden_size * 4 + j] =
-            weight_ih_l(j + input_size * 2, i);
-        weights_l[3 * hidden_size + i * hidden_size * 4 + j] =
-            weight_ih_l(j + input_size * 3, i);
-      }
-    }
-    for (size_t i = 0; i < hidden_size; ++i) {
-      for (size_t j = 0; j < hidden_size; ++j) {
-        weights_l[input_copy_size * 4 + i * hidden_size * 4 + j] =
-            weight_hh_l(j, i);
-        weights_l[hidden_size + input_copy_size * 4 + i * hidden_size * 4 + j] =
-            weight_hh_l(hidden_size + j, i);
-
-        weights_l[2 * hidden_size + 4 * input_copy_size + 4 * i * hidden_size +
-                  j] = weight_hh_l(hidden_size * 2 + j, i);
-        weights_l[3 * hidden_size + 4 * input_copy_size + i * hidden_size * 4 +
-                  j] = weight_hh_l(hidden_size * 3 + j, i);
-      }
-    }
-
-    memcpy(bias_ih_l, bias_ih_ll.data.get(), sizeof(float) * 4 * hidden_size);
-    memcpy(bias_hh_l, bias_hh_ll.data.get(), sizeof(float) * 4 * hidden_size);
-
-  }
-
   void gemm(float* X, float* W, const int M, const int N,
              const int K, float* buffer) {
     // memcpy(buffer, bias, sizeof(float) * 4 * hidden_size);
@@ -189,6 +150,46 @@ struct LSTM {
       }
     }
     return std::make_tuple(h_t, c_t);
+  }
+
+
+  void set_weights(const Tensor<float>& weight_ih_l,
+                   const Tensor<float>& weight_hh_l,
+                   const Tensor<float>& bias_ih_ll,
+                   const Tensor<float>& bias_hh_ll) {
+    size_t input_copy_size = hidden_size * input_size;
+    size_t input_offset = (input_size + hidden_size) * hidden_size;
+    size_t hidden_copy_size = hidden_size * hidden_size;
+
+    // Take matrix and transpose it.
+    for (size_t i = 0; i < input_size; ++i) {
+      for (size_t j = 0; j < hidden_size; ++j) {
+        weights_l[i * hidden_size * 4 + j] = weight_ih_l(j, i);
+        weights_l[hidden_size + i * hidden_size * 4 + j] =
+            weight_ih_l(j + input_size, i);
+        weights_l[2 * hidden_size + i * hidden_size * 4 + j] =
+            weight_ih_l(j + input_size * 2, i);
+        weights_l[3 * hidden_size + i * hidden_size * 4 + j] =
+            weight_ih_l(j + input_size * 3, i);
+      }
+    }
+    for (size_t i = 0; i < hidden_size; ++i) {
+      for (size_t j = 0; j < hidden_size; ++j) {
+        weights_l[input_copy_size * 4 + i * hidden_size * 4 + j] =
+            weight_hh_l(j, i);
+        weights_l[hidden_size + input_copy_size * 4 + i * hidden_size * 4 + j] =
+            weight_hh_l(hidden_size + j, i);
+
+        weights_l[2 * hidden_size + 4 * input_copy_size + 4 * i * hidden_size +
+                  j] = weight_hh_l(hidden_size * 2 + j, i);
+        weights_l[3 * hidden_size + 4 * input_copy_size + i * hidden_size * 4 +
+                  j] = weight_hh_l(hidden_size * 3 + j, i);
+      }
+    }
+
+    memcpy(bias_ih_l, bias_ih_ll.data.get(), sizeof(float) * 4 * hidden_size);
+    memcpy(bias_hh_l, bias_hh_ll.data.get(), sizeof(float) * 4 * hidden_size);
+
   }
 
   void print_matrix(float* data, int dim1, int dim2) {
