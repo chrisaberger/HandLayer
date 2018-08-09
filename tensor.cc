@@ -2,15 +2,33 @@
 #include "cnpy.h"
 
 template <class T>
-Tensor<T>::Tensor(const std::string filename) {
+Tensor<T> Tensor<T>::from_npy(const std::string filename) {
   cnpy::NpyArray arr = cnpy::npy_load(filename);
-  shape = arr.shape;
-  numel = arr.num_vals;
 
-  T* mydata = (T*) malloc(arr.word_size * arr.num_vals * sizeof(T));
+  Tensor<T> t;
+  t.shape = arr.shape;
+  t.numel = arr.num_vals;
+
+  T* rawptr = (T*) malloc(arr.word_size * arr.num_vals * sizeof(T));
   T* loaded_data = arr.data<T>();
-  memcpy(mydata, loaded_data, arr.word_size * arr.num_vals * sizeof(T));
-  data = std::unique_ptr<T>(mydata);
+  memcpy(rawptr, loaded_data, arr.word_size * arr.num_vals * sizeof(T));
+  t.data = std::unique_ptr<T>(rawptr);
+  return t;
+}
+
+template <class T>
+Tensor<T>::Tensor(std::vector<size_t> shape_in) {
+  shape = shape_in;
+
+  // Compute the number of elems from the shape.
+  numel = 1;
+  for(auto const& s: shape){
+    numel *= s;
+  }
+
+  // Allocate our data.
+  T* rawptr = (T*)malloc(sizeof(T) * numel);
+  data = std::unique_ptr<T>(rawptr);
 }
 
 template<class T>     
@@ -43,6 +61,11 @@ const T Tensor<T>::operator()(const size_t i, const size_t j) const
     const size_t index = i * shape[1] + j;
     assert(index < numel);
     return data.get()[index];
+}
+
+template<class T>     
+void Tensor<T>::zero(){
+  memset(data.get(), 0, numel * sizeof(T));
 }
 
 template <class T>

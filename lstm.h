@@ -11,8 +11,30 @@ float fp_tanh(const float in) { return tanh(in); }
 struct LSTM {
   /*
   Model Parameters.
-  */
-  float* weights_l;
+
+  Weights look like:
+                   
+                   hidden_size   hidden_size   hidden_size   hidden_size
+                 ----------------------------------------------------------
+                |             |              |             |              |
+    inp size    |             |              |             |              |
+                |             |              |             |              |
+                --------------|--------------------------------------------  
+                |             |              |             |              |
+    hidden size |             |              |             |              |
+                |             |              |             |              |
+                -----------------------------------------------------------
+
+  Inputs look like:
+                
+              inp size  hidden_size   i   h    i    h   i   h   i   h
+              ---------------------------------------------------------
+             |        |            |    |    |    |   |   |   |   |   |
+  batch_size |        |            |    |    |    |   |   |   |   |   |
+             |        |            |    |    |    |   |   |   |   |   |
+              ---------------------------------------------------------     
+  */    
+  Tensor<float> weights_l;
   float* bias_ih_l;
   float* bias_hh_l;
 
@@ -26,16 +48,16 @@ struct LSTM {
   float* x_h_in_cat;
   float* buffers;
 
-  const int input_size;
-  const int hidden_size;
-  const int num_layers;
+  const size_t input_size;
+  const size_t hidden_size;
+  const size_t num_layers;
   const bool bias;
   const bool batch_first;
   const int dropout;
   const bool bidirectional;
 
-  LSTM(const int input_size, const int hidden_size, const int batch_size,
-       const int num_layers = 1, const bool bias = true,
+  LSTM(const size_t input_size, const size_t hidden_size, const size_t batch_size,
+       const size_t num_layers = 1, const bool bias = true,
        const bool batch_first = false, const int dropout = 0,
        const bool bidirectional = false)
       : input_size(input_size),
@@ -46,10 +68,10 @@ struct LSTM {
         dropout(dropout),
         bidirectional(bidirectional) {
     // Allocate parameters.
-    weights_l = (float*)malloc(sizeof(float) * 4 * hidden_size *
-                               (input_size + hidden_size));
-    memset(weights_l, 0, sizeof(float) * 4 * hidden_size *
-                               (input_size + hidden_size));
+    //std::vector<size_t> a = ;
+    weights_l = Tensor<float>({input_size + hidden_size, 4 * hidden_size});
+    weights_l.zero();
+
     bias_ih_l = (float*)malloc(sizeof(float) * 4 * hidden_size);
     bias_hh_l = (float*)malloc(sizeof(float) * 4 * hidden_size);
 
@@ -123,10 +145,9 @@ struct LSTM {
 
     print_matrix(x_h_in_cat, batch_size, input_size + hidden_size);
 
-    print_matrix(weights_l, input_size + hidden_size, hidden_size * 4);
+    weights_l.print();
 
-
-    gemm(x_h_in_cat, weights_l, batch_size, 4 * hidden_size,
+    gemm(x_h_in_cat, weights_l.data_ptr(), batch_size, 4 * hidden_size,
          input_size + hidden_size, buffers);
 
     print_matrix(buffers, batch_size, 4* hidden_size);
@@ -157,39 +178,29 @@ struct LSTM {
                    const Tensor<float>& weight_hh_l,
                    const Tensor<float>& bias_ih_ll,
                    const Tensor<float>& bias_hh_ll) {
-    size_t input_copy_size = hidden_size * input_size;
-    size_t input_offset = (input_size + hidden_size) * hidden_size;
-    size_t hidden_copy_size = hidden_size * hidden_size;
-
     // Take matrix and transpose it.
     for (size_t i = 0; i < input_size; ++i) {
       for (size_t j = 0; j < hidden_size; ++j) {
-        weights_l[i * hidden_size * 4 + j] = weight_ih_l(j, i);
-        weights_l[hidden_size + i * hidden_size * 4 + j] =
-            weight_ih_l(j + input_size, i);
-        weights_l[2 * hidden_size + i * hidden_size * 4 + j] =
-            weight_ih_l(j + input_size * 2, i);
-        weights_l[3 * hidden_size + i * hidden_size * 4 + j] =
-            weight_ih_l(j + input_size * 3, i);
+        weights_l(i, j) = weight_ih_l(j, i);
+        weights_l(i, j + hidden_size) = weight_ih_l(j + input_size, i);
+        weights_l(i, j + 2 * hidden_size) = weight_ih_l(j + input_size * 2, i);
+        weights_l(i, j + 3 * hidden_size) = weight_ih_l(j + input_size * 3, i);
       }
     }
     for (size_t i = 0; i < hidden_size; ++i) {
       for (size_t j = 0; j < hidden_size; ++j) {
-        weights_l[input_copy_size * 4 + i * hidden_size * 4 + j] =
-            weight_hh_l(j, i);
-        weights_l[hidden_size + input_copy_size * 4 + i * hidden_size * 4 + j] =
+        weights_l(i + input_size, j) = weight_hh_l(j, i);
+        weights_l(i + input_size, hidden_size + j) =
             weight_hh_l(hidden_size + j, i);
-
-        weights_l[2 * hidden_size + 4 * input_copy_size + 4 * i * hidden_size +
-                  j] = weight_hh_l(hidden_size * 2 + j, i);
-        weights_l[3 * hidden_size + 4 * input_copy_size + i * hidden_size * 4 +
-                  j] = weight_hh_l(hidden_size * 3 + j, i);
+        weights_l(i + input_size, 2 * hidden_size + j) =
+            weight_hh_l(hidden_size * 2 + j, i);
+        weights_l(i + input_size, 3 * hidden_size + j) =
+            weight_hh_l(hidden_size * 3 + j, i);
       }
     }
 
     memcpy(bias_ih_l, bias_ih_ll.data.get(), sizeof(float) * 4 * hidden_size);
     memcpy(bias_hh_l, bias_hh_ll.data.get(), sizeof(float) * 4 * hidden_size);
-
   }
 
   void print_matrix(float* data, int dim1, int dim2) {

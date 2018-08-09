@@ -24,11 +24,11 @@ int main() {
   std::vector<float> h = {-0.6331, 0.8795, -0.6842, -1.1352,  0.3773, -0.2824};
   std::vector<float> c = {-0.5525, 0.6355, -0.3968, -0.6571, -1.6428, 0.9803};
 
-  Tensor<float> h_new("../h.npy");
+  Tensor<float> h_new = Tensor<float>::from_npy("../h.npy");
   h_new.print();
 
-  Tensor<float> c_new("../h.npy");
-  h_new.print();
+  Tensor<float> c_new = Tensor<float>::from_npy("../c.npy");
+  c_new.print();
 
   //std::vector<float> h = {1, 1, 1, 1, 1, 1};
   //std::vector<float> c = {0, 0, 0, 0, 0, 0};
@@ -37,9 +37,10 @@ int main() {
   int batch_size = 2;
   int n_hidden = 3;
   LSTM lstm = LSTM(input_size, n_hidden, batch_size, 1, true);
-  lstm.set_weights(
-      Tensor<float>("../weight_ih.npy"), Tensor<float>("../weight_hh.npy"),
-      Tensor<float>("../bias_ih.npy"), Tensor<float>("../bias_hh.npy"));
+  lstm.set_weights(Tensor<float>::from_npy("../weight_ih.npy"),
+                   Tensor<float>::from_npy("../weight_hh.npy"),
+                   Tensor<float>::from_npy("../bias_ih.npy"),
+                   Tensor<float>::from_npy("../bias_hh.npy"));
   std::tuple<float*, float*> h_c =
       lstm.forward(input_data.data(), h.data(), c.data(), batch_size);
 

@@ -12,14 +12,19 @@ struct Tensor {
   bool requires_grad;
   std::unique_ptr<T> grad_data;
 
-  Tensor(const std::string npy_filename);
+  Tensor(){};
+  Tensor(const std::vector<size_t> shape);
+
+  static Tensor<T> from_npy(const std::string npy_filename);
 
   T& operator[](const size_t i);
   const T operator[](const size_t i) const;
   T& operator()(const size_t i, const size_t j);
   const T operator()(const size_t i, const size_t j) const;
   void print();
+  void zero();
 
+  T* data_ptr(){return data.get();};
 private:
   void recurse_print(const size_t level, const size_t index, const bool last);
 };
