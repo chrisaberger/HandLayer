@@ -1,3 +1,6 @@
+#ifndef EMBEDDING_H_
+#define EMBEDDING_H_
+
 #include <math.h>
 #include <vector>
 #include "tensor.h"
@@ -8,13 +11,9 @@ struct Embedding {
   const size_t num_embeddings;
   const size_t embedding_dim;
 
-  Embedding(const size_t num_embeddings, const size_t embedding_dim)
-      : num_embeddings(num_embeddings), embedding_dim(embedding_dim) {
-    weight = Tensor<T>({num_embeddings, embedding_dim});
-    for(size_t i = 0; i < weight.numel; ++i){
-      weight[i] = (T)i;
-    }
-    weight.print();
+  Embedding(Tensor<float> _weight)
+      : num_embeddings(_weight.shape[0]), embedding_dim(_weight.shape[1]) {
+    weight = _weight;
   }
 
   Tensor<T> forward(const Tensor<size_t>& indexes) {
@@ -34,3 +33,5 @@ struct Embedding {
     return result;
   }
 };
+
+#endif

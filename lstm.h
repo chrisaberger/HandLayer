@@ -1,9 +1,12 @@
+#ifndef LSTM_H_
+#define LSTM_H_
+
 #include <math.h>
 #include <vector>
-#include "cblas.h"
+#include "blas_wrapper.h"
 #include "tensor.h"
 
-typedef  Tensor<float> t_type;
+typedef Tensor<float> t_type;
 
 namespace {
 float fp_sigmoid(const float in) { return 1.0 / (1.0 + exp(-in)); }
@@ -15,27 +18,27 @@ struct LSTM {
   Model Parameters.
 
   Weights look like:
-                   
+
                    hidden_size   hidden_size   hidden_size   hidden_size
                  ----------------------------------------------------------
                 |             |              |             |              |
     inp size    |             |              |             |              |
                 |             |              |             |              |
-                --------------|--------------------------------------------  
+                --------------|--------------------------------------------
                 |             |              |             |              |
     hidden size |             |              |             |              |
                 |             |              |             |              |
                 -----------------------------------------------------------
 
   Inputs look like:
-                
-              inp size  hidden_size 
+
+              inp size  hidden_size
               ----------------------
              |        |            |
   batch_size |        |            |
              |        |            |
-              ----------------------   
-  */    
+              ----------------------
+  */
   Tensor<float> weights_l;
   Tensor<float> bias_ih_l;
   Tensor<float> bias_hh_l;
@@ -66,20 +69,15 @@ struct LSTM {
         dropout(dropout),
         bidirectional(bidirectional) {
     // Allocate parameters.
-    //std::vector<size_t> a = ;
+    // std::vector<size_t> a = ;
     weights_l = Tensor<float>({input_size + hidden_size, 4 * hidden_size});
     weights_l.zero();
+    bias_ih_l = Tensor<float>({4, hidden_size});
+    bias_hh_l = Tensor<float>({4, hidden_size});
+
     // Allocate intermediate buffers.
     buffers = Tensor<float>({batch_size, 4 * hidden_size});
     x_h_in_cat = Tensor<float>({batch_size, hidden_size + input_size});
-  }
-
-  void gemm(float* X, float* W, const int M, const int N,
-             const int K, float* buffer) {
-    // memcpy(buffer, bias, sizeof(float) * 4 * hidden_size);
-    const float bias_f = bias ? 1.0 : 0.0;
-    cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1.0, X, K,
-                W, N, bias_f, buffer, N);
   }
 
   std::tuple<t_type, t_type> forward(const Tensor<float>& X,
@@ -114,10 +112,11 @@ struct LSTM {
       }
     }
 
-    weights_l.print();
+    // weights_l.print();
 
-    gemm(x_h_in_cat.data_ptr(), weights_l.data_ptr(), batch_size,
-         4 * hidden_size, input_size + hidden_size, buffers.data_ptr());
+    blas_wrapper::gemm(x_h_in_cat.data_ptr(), weights_l.data_ptr(), batch_size,
+                       4 * hidden_size, input_size + hidden_size,
+                       buffers.data_ptr(), bias);
 
     for (int i = 0; i < batch_size; ++i) {
       for (int j = 0; j < hidden_size; ++j) {
@@ -135,18 +134,18 @@ struct LSTM {
     return std::make_tuple(std::move(h_t), std::move(c_t));
   }
 
-
   void set_weights(const Tensor<float>& weight_ih_l,
                    const Tensor<float>& weight_hh_l,
                    const Tensor<float>& bias_ih_ll,
                    const Tensor<float>& bias_hh_ll) {
     // Take matrix and transpose it.
+    weight_ih_l.print();
     for (size_t i = 0; i < input_size; ++i) {
       for (size_t j = 0; j < hidden_size; ++j) {
         weights_l(i, j) = weight_ih_l(j, i);
-        weights_l(i, j + hidden_size) = weight_ih_l(j + input_size, i);
-        weights_l(i, j + 2 * hidden_size) = weight_ih_l(j + input_size * 2, i);
-        weights_l(i, j + 3 * hidden_size) = weight_ih_l(j + input_size * 3, i);
+        weights_l(i, j + hidden_size) = weight_ih_l(j + hidden_size, i);
+        weights_l(i, j + 2 * hidden_size) = weight_ih_l(j + hidden_size * 2, i);
+        weights_l(i, j + 3 * hidden_size) = weight_ih_l(j + hidden_size * 3, i);
       }
     }
     for (size_t i = 0; i < hidden_size; ++i) {
@@ -179,3 +178,5 @@ struct LSTM {
     std::cout << " ] " << std::endl;
   }
 };
+
+#endif

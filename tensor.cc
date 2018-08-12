@@ -101,7 +101,7 @@ Tensor<T> Tensor<T>::copy(const Tensor<T>& src){
 
 
 template<class T>
-Tensor<T> Tensor<T>::view(const size_t start, const size_t end){
+Tensor<T> Tensor<T>::view(const size_t start, const size_t end) const{
   assert(shape.size() > 0);
   Tensor<T> t;
   const size_t elem_per_dim_1 = numel/shape[0];
@@ -116,7 +116,7 @@ Tensor<T> Tensor<T>::view(const size_t start, const size_t end){
 
 template <class T>
 void Tensor<T>::recurse_print(const size_t level, const size_t indexes,
-                              const bool last) {
+                              const bool last) const {
   if (level == shape.size() - 1) {
     std::cout << " [ ";
     for (size_t i = 0; i < shape[level]; ++i) {
@@ -146,7 +146,7 @@ void Tensor<T>::recurse_print(const size_t level, const size_t indexes,
 }
 
 template<class T>
-void Tensor<T>::print(){
+void Tensor<T>::print() const {
   std::cout << "Tensor(";
   //auto a = (*this)[0][0];
   recurse_print(0, 0, false);

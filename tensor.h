@@ -28,17 +28,17 @@ struct Tensor {
   const T operator[](const size_t i) const;
   T& operator()(const size_t i, const size_t j);
   const T operator()(const size_t i, const size_t j) const;
-  void print();
+  void print() const;
   void zero();
   // Pull a view out across the first dimension.
-  Tensor<T> view(const size_t start, const size_t end);
+  Tensor<T> view(const size_t start, const size_t end) const;
   void copy_data_from(const Tensor<T>& src);
 
   inline T* data_ptr() const { return data.get() + _ptr_offset; };
 
  private:
   size_t _ptr_offset = 0;
-  void recurse_print(const size_t level, const size_t index, const bool last);
+  void recurse_print(const size_t level, const size_t index, const bool last) const;
 };
 
 #endif
