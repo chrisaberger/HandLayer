@@ -154,4 +154,5 @@ void Tensor<T>::print() const {
 }
 
 template class Tensor<size_t>;
+template class Tensor<bfloat16>;
 template class Tensor<float>;

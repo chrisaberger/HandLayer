@@ -2,6 +2,7 @@
 #define TENSOR_H_
 
 #include <vector>
+#include "bfloat16.h"
 
 /*
 A row major tensor.

@@ -11,11 +11,11 @@ int main() {
   const size_t hidden_dim = 6;
   const size_t num_out_features = 3;
 
-  Tensor<size_t> input = Tensor<size_t>::from_vec({0, 1, 2, 3, 4}, {5}); 
+  Tensor<size_t> input = Tensor<size_t>::from_vec({0, 1, 2, 3, 4}, {5});
 
   Embedding<float> emb =
       Embedding<float>(Tensor<float>::from_npy("../pos_tagging/embedding.npy"));
-      //Embedding<float>(Tensor<float>({num_words,embedding_dim}));
+  // Embedding<float>(Tensor<float>({num_words,embedding_dim}));
 
   emb.weight.print();
 
@@ -32,8 +32,8 @@ int main() {
       Tensor<float>::from_npy("../pos_tagging/linear_weight.npy"),
       Tensor<float>::from_npy("../pos_tagging/linear_bias.npy"));
 
-  //out.print();
-  //exit(0);
+  // out.print();
+  // exit(0);
 
   Tensor<float> h({1, hidden_dim});
   Tensor<float> c({1, hidden_dim});
@@ -44,14 +44,13 @@ int main() {
   dec.print();
 
   std::cout << "LSTM FORWARD" << std::endl;
-  auto h_c = lstm.forward(dec.view(0,1), h, c);
+  auto h_c = lstm.forward(dec.view(0, 1), h, c);
   std::cout << "h_t" << std::endl;
   std::get<0>(h_c).print();
   std::cout << "c_t" << std::endl;
   std::get<1>(h_c).print();
 
-  Tensor<float> lin_out =
-      linear.forward(std::get<0>(h_c));
+  Tensor<float> lin_out = linear.forward(std::get<0>(h_c));
   lin_out.print();
 
   Tensor<float> out = LogSoftmax<float>::forward(lin_out);
