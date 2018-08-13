@@ -11,7 +11,7 @@ struct Embedding {
   const size_t num_embeddings;
   const size_t embedding_dim;
 
-  Embedding(Tensor<float> _weight)
+  Embedding(Tensor<T> _weight)
       : num_embeddings(_weight.shape[0]), embedding_dim(_weight.shape[1]) {
     weight = _weight;
   }

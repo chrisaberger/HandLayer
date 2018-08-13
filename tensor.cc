@@ -44,6 +44,36 @@ Tensor<T>::Tensor(std::vector<size_t> shape_in) {
   data = std::shared_ptr<T>(rawptr);
 }
 
+template<class T>
+Tensor<T>::Tensor(const Tensor<T>& in) {
+  shape = in.shape;
+  numel = in.numel;
+  T* rawptr = (T*)malloc(sizeof(T) * numel);
+  memcpy(rawptr, in.data_ptr(), sizeof(T) * numel);
+  for(size_t i = 0; i < in.numel; ++i){
+    rawptr[i] = T(in[i]);
+  }
+  data = std::shared_ptr<T>(rawptr);
+}
+
+template<>
+template<>
+Tensor<bfloat16>::Tensor(const Tensor<float>& in) {
+  shape = in.shape;
+  numel = in.numel;
+  bfloat16* rawptr = (bfloat16*)malloc(sizeof(bfloat16) * numel);
+  for(size_t i = 0; i < in.numel; ++i){
+    rawptr[i] = bfloat16(in[i]);
+  }
+  data = std::shared_ptr<bfloat16>(rawptr);
+}
+
+/*
+template<>
+Tensor<bfloat16>::Tensor(const Tensor<float>& in) {
+  std::cout << "IN CONVERTER" << std::endl;
+}*/
+
 template<class T>     
 T& Tensor<T>::operator[](const size_t i)
 {

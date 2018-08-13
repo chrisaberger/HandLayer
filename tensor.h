@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "bfloat16.h"
+#include "float32.h"
 
 /*
 A row major tensor.
@@ -19,6 +20,11 @@ struct Tensor {
 
   Tensor(){};
   Tensor(const std::vector<size_t> shape);
+
+  Tensor(const Tensor<T>& inp);
+
+  template<class K>
+  Tensor(const Tensor<K>& inp);
 
   static Tensor<T> from_vec(const std::vector<T>& vec,
                             const std::vector<size_t>& shape_in);
