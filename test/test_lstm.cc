@@ -77,8 +77,4 @@ TEST_CASE("Testing lstm", "[float_lstm]") {
     }
   }
 
-
-
-
-
 }

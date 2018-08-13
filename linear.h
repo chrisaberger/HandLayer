@@ -39,18 +39,10 @@ struct Linear {
       for(size_t i = 0; i < X.shape[0]; ++i){
         for(size_t j = 0; j < out_features; ++j){
           output(i, j) = bias_l[j];
-          std::cout << bias_l[j] << std::endl;
         }
       }
     }
 
-    X.print();
-    weight_l.print();
-    bias_l.print();
-    std::cout << "OUT" << std::endl;
-    output.print();
-    std::cout << X.shape[0] << " " << out_features << " " << in_features
-              << std::endl;
     gemm(X.data_ptr(), weight_l.data_ptr(), X.shape[0], out_features,
          in_features, output.data_ptr(), bias);
     return output;
