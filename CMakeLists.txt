@@ -15,13 +15,23 @@ find_package( ZLIB REQUIRED )
 
 include_directories(${OpenBLAS_INCLUDE_DIRS})
 
-add_executable(csim main.cc
-  cnpy.cc
-  tensor.cc
+
+add_library(csim SHARED
+    cnpy.cc
+    tensor.cc
 )
 
-# link blas
 target_link_libraries(csim
     ${OpenBLAS_LIBRARIES}
     ${ZLIB_LIBRARIES}
 )
+
+add_executable(main main.cc)
+
+# link blas
+target_link_libraries(main
+    csim
+)
+
+add_subdirectory(test)
+

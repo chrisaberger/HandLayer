@@ -1,9 +1,9 @@
 #ifndef BFLOAT16_H_
 #define BFLOAT16_H_
 
+#include <math.h>
 #include <iostream>
 #include <string>
-#include <math.h>
 #include "cblas.h"
 
 struct bfloat16 {
@@ -28,16 +28,14 @@ struct bfloat16 {
   }
 
   bfloat16 operator/(bfloat16 const& obj) const {
-    return bfloat16(_fdata/obj._fdata);
+    return bfloat16(_fdata / obj._fdata);
   }
 
   bfloat16 operator-(bfloat16 const& obj) const {
     return bfloat16(_fdata - obj._fdata);
   }
 
-  bfloat16 operator-() const {
-    return bfloat16(-_fdata);
-  }
+  bfloat16 operator-() const { return bfloat16(-_fdata); }
 
   void round() { std::cout << _idata << std::endl; }
 
@@ -78,15 +76,13 @@ inline bfloat16 tanh(const bfloat16& in) { return bfloat16(tanh(in._fdata)); }
 inline bfloat16 sigmoid(const bfloat16& in) {
   return bfloat16(1.0) / (bfloat16(1.0) + exp(-in));
 }
-inline void gemm(bfloat16* X, bfloat16* W, const int M, const int N, const int K,
-          bfloat16* buffer, const bool bias) {
+inline void gemm(bfloat16* X, bfloat16* W, const int M, const int N,
+                 const int K, bfloat16* buffer, const bool bias) {
   const float bias_f = bias ? 1.0 : 0.0;
   cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1.0,
-              (float*)X, K, (float*)W, N, bias_f,
-              (float*)buffer, N);
-  for(size_t i = 0; i < M*N; ++i){
+              (float*)X, K, (float*)W, N, bias_f, (float*)buffer, N);
+  for (size_t i = 0; i < M * N; ++i) {
     buffer[i].clamp();
   }
-
 }
 #endif

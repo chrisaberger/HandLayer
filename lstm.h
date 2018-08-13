@@ -131,7 +131,6 @@ struct LSTM {
                    const Tensor<T>& bias_ih_ll,
                    const Tensor<T>& bias_hh_ll) {
     // Take matrix and transpose it.
-    weight_ih_l.print();
     for (size_t i = 0; i < input_size; ++i) {
       for (size_t j = 0; j < hidden_size; ++j) {
         weights_l(i, j) = weight_ih_l(j, i);
