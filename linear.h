@@ -49,9 +49,10 @@ struct Linear {
     bias_l.print();
     std::cout << "OUT" << std::endl;
     output.print();
-    std::cout << X.shape[0] << " " << out_features << " " << in_features << std::endl;
-    gemm(X.data_ptr(), weight_l.data_ptr(), X.shape[0],
-                       out_features, in_features, output.data_ptr(), bias);
+    std::cout << X.shape[0] << " " << out_features << " " << in_features
+              << std::endl;
+    gemm(X.data_ptr(), weight_l.data_ptr(), X.shape[0], out_features,
+         in_features, output.data_ptr(), bias);
     return output;
   }
 };

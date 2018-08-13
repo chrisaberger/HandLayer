@@ -6,6 +6,9 @@
 #include "tensor.h"
 
 int main() {
+  auto bf = bfloat16(82.3);
+  auto bf2 = bf/bfloat16(83.2);
+  bf.print_fields();
   /*
   auto bf = bfloat16(82.3);
   std::cout << sizeof(bfloat16) << std::endl;

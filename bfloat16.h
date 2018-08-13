@@ -72,8 +72,9 @@ inline std::ostream& operator<<(std::ostream& os, const bfloat16& dt) {
   return os;
 }
 
-inline bfloat16 exp(const bfloat16& in) { return exp(in._fdata); }
-inline bfloat16 tanh(const bfloat16& in) { return tanh(in._fdata); }
+inline bfloat16 log(const bfloat16& in) { return bfloat16(log(in._fdata)); }
+inline bfloat16 exp(const bfloat16& in) { return bfloat16(exp(in._fdata)); }
+inline bfloat16 tanh(const bfloat16& in) { return bfloat16(tanh(in._fdata)); }
 inline bfloat16 sigmoid(const bfloat16& in) {
   return bfloat16(1.0) / (bfloat16(1.0) + exp(-in));
 }
