@@ -1,4 +1,4 @@
-### CSIM
+# CSIM
 
 A Reimplementation of some basic neural network cells in C++.
 
