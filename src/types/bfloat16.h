@@ -91,7 +91,8 @@ inline bfloat16 sigmoid(const bfloat16& in) {
   return bfloat16(1.0) / (bfloat16(1.0) + exp(-in));
 }
 inline void gemm(bfloat16* X, bfloat16* W, const int M, const int N,
-                 const int K, bfloat16* buffer, const bool bias) {
+                 const int K, bfloat16* buffer, const bool bias,
+                 const std::string type = "") {
   const float bias_f = bias ? 1.0 : 0.0;
   cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, 1.0,
               (float*)X, K, (float*)W, N, bias_f, (float*)buffer, N);
