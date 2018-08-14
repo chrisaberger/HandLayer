@@ -1,6 +1,6 @@
 #include "catch/catch.hpp"
 #include "tensor.h"
-#include "lstm.h"
+#include "layers/lstm.h"
 #include <limits>
 
 TEST_CASE("Testing lstm", "[float_lstm]") {

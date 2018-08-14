@@ -1,6 +1,6 @@
 #include "catch/catch.hpp"
 #include "tensor.h"
-#include "linear.h"
+#include "layers/linear.h"
 #include <limits>
 
 TEST_CASE("Testing linear", "[float_linear]") {

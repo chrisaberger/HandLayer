@@ -31,6 +31,20 @@ struct bfloat16 {
     return bfloat16(_fdata / obj._fdata);
   }
 
+  bool operator>(bfloat16 const& obj) const {
+    return _fdata > obj._fdata;
+  }
+
+  void operator-=(bfloat16 const& obj) {
+    _fdata -= obj._fdata;
+    clamp();
+  }
+
+  void operator+=(bfloat16 const& obj) {
+    _fdata += obj._fdata;
+    clamp();
+  }
+
   bfloat16 operator-(bfloat16 const& obj) const {
     return bfloat16(_fdata - obj._fdata);
   }

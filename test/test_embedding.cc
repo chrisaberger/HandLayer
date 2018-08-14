@@ -1,6 +1,6 @@
 #include "catch/catch.hpp"
 #include "tensor.h"
-#include "embedding.h"
+#include "layers/embedding.h"
 #include <limits>
 
 TEST_CASE("Testing embedding lookups", "[float_embeddings]") {

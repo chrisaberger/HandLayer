@@ -14,11 +14,16 @@ find_package( OpenBLAS REQUIRED )
 find_package( ZLIB REQUIRED )
 
 include_directories(${OpenBLAS_INCLUDE_DIRS})
-
+include_directories("src")
+include_directories("third_party")
 
 add_library(csim SHARED
-    cnpy.cc
-    tensor.cc
+    third_party/cnpy.cc
+    src/tensor.cc
+    src/layers/embedding.cc
+    src/layers/linear.cc
+    src/layers/lstm.cc
+    src/layers/logsoftmax.cc
 )
 
 target_link_libraries(csim
@@ -26,12 +31,15 @@ target_link_libraries(csim
     ${ZLIB_LIBRARIES}
 )
 
-add_executable(main main.cc)
+file(GLOB files "apps/*.cc")
+foreach(file ${files})
+  get_filename_component(BASE_NAME ${file} NAME_WE)
+  
+  add_executable(${BASE_NAME} ${file})
+  target_link_libraries(${BASE_NAME} csim)
+endforeach()
 
-# link blas
-target_link_libraries(main
-    csim
-)
+
 
 add_subdirectory(test)
 

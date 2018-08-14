@@ -1,6 +1,6 @@
 #include "catch/catch.hpp"
 #include "tensor.h"
-#include "logsoftmax.h"
+#include "layers/logsoftmax.h"
 #include <limits>
 
 TEST_CASE("Testing logsoftmax", "[float_logsoftmax]") {
