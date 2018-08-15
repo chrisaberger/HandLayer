@@ -1,6 +1,6 @@
-# CSIM
+# Part of Speech Tagging Inference in C++
 
-A implementation of some basic neural network cells in C++.
+An implementation of some basic neural network cells in C++ for pedagogical purposes. 
 
 ## Dependencies
 
@@ -22,6 +22,12 @@ make
 ## Running
 
 After building the binaries are found in the `bin` folder.
+
+Currently a app to run inference on part of speech tagging app can be run.
+
+```
+./bin/part_of_speech_tagger
+```
 
 ## Tests
 

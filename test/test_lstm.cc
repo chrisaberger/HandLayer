@@ -1,4 +1,4 @@
-#include "catch/catch.hpp"
+#include "third_party/catch/catch.hpp"
 #include "tensor.h"
 #include "layers/lstm.h"
 #include <limits>
