@@ -1,6 +1,6 @@
 # Part of Speech Tagging Inference in C++
 
-An implementation of some basic neural network cells in C++ for pedagogical purposes. 
+An inference implementation of `LSTM`, `Linear`, and `LogSoftmax` neural network cells in C++ for pedagogical purposes. Verfired against `apps/pos_data/pytorch_baseline.py`. 
 
 ## Dependencies
 
