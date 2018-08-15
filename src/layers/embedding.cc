@@ -24,5 +24,4 @@ Tensor<T> Embedding<T>::forward(const Tensor<size_t>& indexes) {
   return result;
 }
 
-template class Embedding<bfloat16>;
 template class Embedding<float>;

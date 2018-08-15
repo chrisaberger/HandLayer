@@ -36,5 +36,4 @@ Tensor<T> Linear<T>::forward(const Tensor<T>& X) {
   return output;
 }
 
-template class Linear<bfloat16>;
 template class Linear<float>;

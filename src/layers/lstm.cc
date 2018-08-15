@@ -109,5 +109,4 @@ void LSTM<T>::set_weights(const Tensor<T>& weight_ih_l,
   bias_hh_l.shape = {4, hidden_size};
 }
 
-template class LSTM<bfloat16>;
 template class LSTM<float>;

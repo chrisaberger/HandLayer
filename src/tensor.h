@@ -2,7 +2,6 @@
 #define TENSOR_H_
 
 #include <vector>
-#include "types/bfloat16.h"
 #include "types/float32.h"
 
 /*

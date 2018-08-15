@@ -31,5 +31,4 @@ Tensor<T> LogSoftmax<T>::forward(const Tensor<T>& inp) {
   return out;
 }
 
-template class LogSoftmax<bfloat16>;
 template class LogSoftmax<float>;
